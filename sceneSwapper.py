@@ -67,4 +67,4 @@ for scene in scenes:
 response = turn_on_scene(lights_on, headers, oldest_scene)
 
 # Print the result
-print(response)
+# print(response) # Not used when running with AHK
