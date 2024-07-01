@@ -1,8 +1,21 @@
 import requests
+from dotenv import load_dotenv
+import os
+from dateutil.parser import parse as parse_date
 
-# Remember to change 
-# - your-homeassistant-url
-# - your-homeassistant-token
+# Load environment variables from .env file
+load_dotenv()
+
+# Get environment variables
+base_url = os.getenv('BASE_URL')
+token = os.getenv('HOMEASSISTANT_TOKEN')
+
+# Define the URL and headers
+url = f"{base_url}/api/states/"
+lights_on = f"{base_url}/api/services/scene/turn_on"
+headers = {
+    "Authorization": f"Bearer {token}"
+}
 
 def get_scene_state(url, headers, entity_id):
     try:
@@ -33,18 +46,10 @@ def turn_on_scene(url, headers, entity_id):
     except Exception as e:
         return {"Error": str(e)}
 
-# Define the URL and headers
-url = "http://your-homeassistant-url:8123/api/states/"
-lights_on = "http://your-homeassistant-url:8123/api/services/scene/turn_on"
-token = "your-homeassistant-token"  # Replace with your actual authentication token
-headers = {
-    "Authorization": f"Bearer {token}"
-}
-
 # Define an array of scene entities
 scenes = [
-    {"entity_id": "scene.scene-1"},
-    {"entity_id": "scene.scene-2"},
+    {"entity_id": "scene.kontor_normal"},
+    {"entity_id": "scene.scene_kjeller_kontor_mote"},
     # Add more scene entities as needed
 ]
 
@@ -56,15 +61,27 @@ oldest_timestamp = None
 for scene in scenes:
     # Get the state for the current scene
     scene_state = get_scene_state(url, headers, scene["entity_id"])
-    scene_timestamp = scene_state.get("last_updated")
+    
+    # Check for errors in the scene state
+    if "Error" in scene_state:
+        print(f"Error retrieving state for {scene['entity_id']}: {scene_state['Error']}")
+        continue
 
-    # Compare the timestamps to determine the oldest scene
-    if oldest_timestamp is None or scene_timestamp < oldest_timestamp:
-        oldest_scene = scene["entity_id"]
-        oldest_timestamp = scene_timestamp
+    scene_timestamp_str = scene_state.get("last_updated")
+
+    # Parse the timestamp and compare it
+    if scene_timestamp_str:
+        try:
+            scene_timestamp = parse_date(scene_timestamp_str)
+            if oldest_timestamp is None or scene_timestamp < oldest_timestamp:
+                oldest_scene = scene["entity_id"]
+                oldest_timestamp = scene_timestamp
+        except Exception as e:
+            print(f"Error parsing date for {scene['entity_id']}: {e}")
 
 # Use a POST request to turn on the oldest scene
-response = turn_on_scene(lights_on, headers, oldest_scene)
-
-# Print the result
-# print(response) # Not used when running with AHK
+if oldest_scene:
+    response = turn_on_scene(lights_on, headers, oldest_scene)
+    print(response)  # Not used when running with AHK
+else:
+    print("No valid scene found to turn on.")

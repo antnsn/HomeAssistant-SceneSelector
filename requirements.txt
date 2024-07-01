@@ -1,0 +1,4 @@
+# requirements.txt
+python-dotenv
+requests
+python-dateutil
