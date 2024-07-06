@@ -3,14 +3,18 @@ from dotenv import load_dotenv
 import os
 from dateutil.parser import parse as parse_date
 
+# Determine the directory of the current script
+script_dir = os.path.dirname(os.path.realpath(__file__))
+
 # Function to create .env file if it doesn't exist
 def create_env_file():
-    if not os.path.exists('.env'):
+    env_path = os.path.join(script_dir, '.env')
+    if not os.path.exists(env_path):
         base_url = input("Enter the BASE_URL: ")
         token = input("Enter the HOMEASSISTANT_TOKEN: ")
         scenes = input("Enter the scenes as a comma-separated list (e.g., scene.kontor_normal,scene.scene_kjeller_kontor_mote): ")
 
-        with open('.env', 'w') as env_file:
+        with open(env_path, 'w') as env_file:
             env_file.write(f"BASE_URL={base_url}\n")
             env_file.write(f"HOMEASSISTANT_TOKEN={token}\n")
             env_file.write(f"SCENES={scenes}\n")
@@ -18,8 +22,9 @@ def create_env_file():
 # Create .env file if it doesn't exist
 create_env_file()
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file located in the script directory
+env_path = os.path.join(script_dir, '.env')
+load_dotenv(dotenv_path=env_path)
 
 # Get environment variables
 base_url = os.getenv('BASE_URL')
