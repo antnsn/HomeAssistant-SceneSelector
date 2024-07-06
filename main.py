@@ -3,12 +3,31 @@ from dotenv import load_dotenv
 import os
 from dateutil.parser import parse as parse_date
 
+# Function to create .env file if it doesn't exist
+def create_env_file():
+    if not os.path.exists('.env'):
+        base_url = input("Enter the BASE_URL: ")
+        token = input("Enter the HOMEASSISTANT_TOKEN: ")
+        scenes = input("Enter the scenes as a comma-separated list (e.g., scene.kontor_normal,scene.scene_kjeller_kontor_mote): ")
+
+        with open('.env', 'w') as env_file:
+            env_file.write(f"BASE_URL={base_url}\n")
+            env_file.write(f"HOMEASSISTANT_TOKEN={token}\n")
+            env_file.write(f"SCENES={scenes}\n")
+
+# Create .env file if it doesn't exist
+create_env_file()
+
 # Load environment variables from .env file
 load_dotenv()
 
 # Get environment variables
 base_url = os.getenv('BASE_URL')
 token = os.getenv('HOMEASSISTANT_TOKEN')
+scenes_str = os.getenv('SCENES')
+
+# Convert scenes string to a list of dictionaries
+scenes = [{"entity_id": scene.strip()} for scene in scenes_str.split(",")]
 
 # Define the URL and headers
 url = f"{base_url}/api/states/"
@@ -45,13 +64,6 @@ def turn_on_scene(url, headers, entity_id):
             return {"Error": f"HTTP request failed with status code {response.status_code}"}
     except Exception as e:
         return {"Error": str(e)}
-
-# Define an array of scene entities
-scenes = [
-    {"entity_id": "scene.kontor_normal"},
-    {"entity_id": "scene.scene_kjeller_kontor_mote"},
-    # Add more scene entities as needed
-]
 
 # Initialize variables to store the oldest scene and timestamp
 oldest_scene = None
